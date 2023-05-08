@@ -576,7 +576,9 @@ async function quote(_ID) {
 
 	voter = new ethers.Contract(VOTER, VOTERABI, provider);
 	tp = Number(await voter.length());
+	ERF = false;
 	for(tpi=0;tpi< tp;tpi++) {
+		if(ERF) {tpi--;ERF=false;}
 		_p = await voter.pools(tpi);
 		_g = await voter.gauges(_p);
 
@@ -597,7 +599,8 @@ async function quote(_ID) {
 		}
 		catch(e) {
 			console.log("Encountered Error at B_IN of "+ tpi +" : " + e );
-			tpi--;
+			//tpi--;
+			ERF = true;
 			continue;
 		}
 
@@ -652,7 +655,8 @@ async function quote(_ID) {
 			GOBJ[`${_ID}`].bc.pop();
 			GOBJ[`${_ID}`].rt.pop();
 			GOBJ[`${_ID}`].rta.pop();
-			tpi--;
+			//tpi--;
+			ERF = true;
 			continue;
 		}
 
