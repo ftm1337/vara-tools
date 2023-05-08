@@ -580,20 +580,26 @@ async function quote(_ID) {
 		_p = await voter.pools(tpi);
 		_g = await voter.gauges(_p);
 
-
-		_bi = await voter.internal_bribes(_g);
-		bi = new ethers.Contract(_bi,BRABI,provider);
-		lbi = await bi.rewardsListLength();
-		bi_rl = [];
-		for(lbi_i=0;lbi_i<lbi;lbi_i++) {
-			bi_rl[lbi_i] = bi.rewards(lbi_i);
-		};
-		bi_r = await Promise.all(bi_rl);
-		bi_erl = [];
-		for(bi_erl_i=0; bi_erl_i<lbi; bi_erl_i++) {
-			bi_erl[bi_erl_i] = bi.earned(bi_r[bi_erl_i], _ID);
-		};
-		bi_er = await Promise.all(bi_erl);
+		try {
+			_bi = await voter.internal_bribes(_g);
+			bi = new ethers.Contract(_bi,BRABI,provider);
+			lbi = await bi.rewardsListLength();
+			bi_rl = [];
+			for(lbi_i=0;lbi_i<lbi;lbi_i++) {
+				bi_rl[lbi_i] = bi.rewards(lbi_i);
+			};
+			bi_r = await Promise.all(bi_rl);
+			bi_erl = [];
+			for(bi_erl_i=0; bi_erl_i<lbi; bi_erl_i++) {
+				bi_erl[bi_erl_i] = bi.earned(bi_r[bi_erl_i], _ID);
+			};
+			bi_er = await Promise.all(bi_erl);
+		}
+		catch(e) {
+			console.log("Encountered Error at B_IN of "+ tpi +" : " + e );
+			tpi--;
+			continue;
+		}
 
 		GOBJ[`${_ID}`].bc.push(_bi);
 		GOBJ[`${_ID}`].rt.push(bi_r);
@@ -626,20 +632,30 @@ async function quote(_ID) {
 		;
 
 
+		try {
+			_be = await voter.external_bribes(_g);
+			be = new ethers.Contract(_be,BRABI,provider);
+			lbe = await be.rewardsListLength();
+			be_rl = [];
+			for(lbe_i=0;lbe_i<lbe;lbe_i++) {
+				be_rl[lbe_i] = be.rewards(lbe_i);
+			}
+			be_r = await Promise.all(be_rl);
+			be_erl = [];
+			for(be_erl_i=0; be_erl_i<lbe; be_erl_i++) {
+				be_erl[be_erl_i] = be.earned(be_r[be_erl_i], _ID);
+			}
+			be_er = await Promise.all(be_erl);
+		}
+		catch(e) {
+			console.log("Encountered Error at B_EX of "+ tpi +" : " + e );
+			GOBJ[`${_ID}`].bc.pop();
+			GOBJ[`${_ID}`].rt.pop();
+			GOBJ[`${_ID}`].rta.pop();
+			tpi--;
+			continue;
+		}
 
-		_be = await voter.external_bribes(_g);
-		be = new ethers.Contract(_be,BRABI,provider);
-		lbe = await be.rewardsListLength();
-		be_rl = [];
-		for(lbe_i=0;lbe_i<lbe;lbe_i++) {
-			be_rl[lbe_i] = be.rewards(lbe_i);
-		}
-		be_r = await Promise.all(be_rl);
-		be_erl = [];
-		for(be_erl_i=0; be_erl_i<lbe; be_erl_i++) {
-			be_erl[be_erl_i] = be.earned(be_r[be_erl_i], _ID);
-		}
-		be_er = await Promise.all(be_erl);
 
 		GOBJ[`${_ID}`].bc.push(_be);
 		GOBJ[`${_ID}`].rt.push(be_r);
@@ -667,7 +683,8 @@ async function quote(_ID) {
 			</div>
 			`
 
-			+"<hr style='border-top:1px dotted rgba(0,0,0,0.2)'>"+  $("logs").innerHTML
+			+  $("logs").innerHTML
+			+ "<hr style='border:none;border-top:1px dashed rgb(255, 255, 255);'>";
 		;
 
 
@@ -681,10 +698,10 @@ async function claimFor(_ID) {
 	cc=[];
 	tc=[];
 	for(i=0; i< tj.bc.length; i++) {
-		for(j=0; j < tj.rta.length; j++) {
-			if( tj.rta[j] > 0 ) {
+		for(j=0; j < tj.rta[i].length; j++) {
+			if( tj.rta[i][j] > 0 ) {
 				cc.push(tj.bc[i]);
-				tc.push(tj.rt[i])
+				tc.push(tj.rt[i]);
 				continue;
 			}
 		}
